@@ -1,7 +1,6 @@
 package com.example.android.pets.data;
 
 import android.content.ContentProvider;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -80,6 +79,13 @@ public class PetProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unknown uri " + uri);
         }
+//
+//        // Notify listeners that the data has changed fot pet content URI
+//        getContext().getContentResolver().notifyChange(uri,null);
+
+//        set notification uri on cursor
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
         return cursor;
     }
 
@@ -131,6 +137,9 @@ public class PetProvider extends ContentProvider {
             return null;
         }
 
+//        Notify listeners that the data has changed fot pet content URI
+        getContext().getContentResolver().notifyChange(uri,null);
+
         // Once we know the ID of the new row in the table,
         // return the new URI with the ID appended to the end of it
         return ContentUris.withAppendedId(uri, id);
@@ -154,6 +163,7 @@ public class PetProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
         }
+
     }
     /**
      * Update pets in the database with the given content values. Apply the changes to the rows
@@ -193,8 +203,18 @@ public class PetProvider extends ContentProvider {
         }
 
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
+        // Perform the update on the database and get the number of rows affected
+        int rowsUpdated = database.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+        // If 1 or more rows were updated, then notify all listeners that the data at the
+        // given URI has changed
+        if (rowsUpdated != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
         // Defines a variable to contain the number of updated rows
-        return database.update(PetContract.PetEntry.TABLE_NAME,values,selection,selectionArgs);
+//        return database.update(PetContract.PetEntry.TABLE_NAME,values,selection,selectionArgs);
+        return rowsUpdated;
     }
 
     /**
@@ -205,20 +225,32 @@ public class PetProvider extends ContentProvider {
         // Get writeable database
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
+        // Track the number of rows that were deleted
+        int rowsDeleted;
+
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PETS:
                 // Delete all rows that match the selection and selection args
-                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+//                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                if (rowsDeleted != 0) getContext().getContentResolver().notifyChange(uri, null);
+                // Return the number of rows deleted
+                return rowsDeleted;
             case PET_ID:
                 // Delete a single row given by the ID in the URI
                 selection = PetContract.PetEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+
+                rowsDeleted = database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                if (rowsDeleted != 0) getContext().getContentResolver().notifyChange(uri, null);
+                // Return the number of rows deleted
+                return rowsDeleted;
+//                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
         }
-    }
+        }
 
     /**
      * Returns the MIME type of data for the content URI.

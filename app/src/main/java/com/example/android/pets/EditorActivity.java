@@ -16,6 +16,7 @@
 package com.example.android.pets;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
@@ -63,6 +64,17 @@ public class EditorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
 
+//        Проверить что этот интент пытается сделать
+//                создать новую запись или отредактировать уже существующую
+        Intent intent = getIntent();
+        Uri currentPetUri = intent.getData();
+
+//        если в переданных данных не содержится uri - создаем новую запись
+        if (currentPetUri == null) {
+            setTitle("Add pet");
+        } else {
+            setTitle(getString(R.string.editor_activity_title_edit_pet));
+        }
         // Find all relevant views that we will need to read user input from
         mNameEditText = (EditText) findViewById(R.id.edit_pet_name);
         mBreedEditText = (EditText) findViewById(R.id.edit_pet_breed);
