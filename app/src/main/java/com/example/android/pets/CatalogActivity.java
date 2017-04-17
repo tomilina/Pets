@@ -33,7 +33,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
 
@@ -83,7 +82,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
-                Uri uri = ContentUris.withAppendedId(PetContract.BASE_CONTENT_URI,id);
+                Uri uri = ContentUris.withAppendedId(PetEntry.CONTENT_URI,id);
                 intent.setData(uri);
                 startActivity(intent);
             }
